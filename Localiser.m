@@ -48,23 +48,12 @@ signal_spa{2} =[left_ear(1:length(signal_tot)),...
         
 signal_spa=(signal_spa{1}+signal_spa{2})/Q;
 
-%%
-p=audioplayer(signal_spa,fs);
-play(p)
 
-%%
+%%  ajout du bruit au niveau de la reception
 
+Psig=mean(mean(signal_spa,2).^2);
+sigma=sqrt(Psig/10)/10;
 
-for position=1:length(Positions)
-    for source=1:Q
-        impulseResponse = hrir.getImpulseResponses(Positions(ceil(source/2)));
-        left_ear=conv(signal_tot,hrir.left);
-        right_ear=conv(signal_tot,hrir.right);  
-        signal_spa=signal_spa + [left_ear(1:length(signal_tot)),...
-            right_ear(1:length(signal_tot)) ];
-    end   
-end
-signal_spa=signal_spa/Q;
 % ajout d'un bruit Basse Frequence
 bruit1=randn(size(signal_tot,1),1);
 bruit2=randn(size(signal_tot,1),1);
@@ -72,11 +61,15 @@ bruit2=randn(size(signal_tot,1),1);
 bruit1=filter(b,a,bruit1);
 bruit2=filter(b,a,bruit2);
 
-signal_spa=rechelonner(signal_spa+[bruit1,bruit2]);
+signal_spa=rechelonner(signal_spa+sigma*[bruit1,bruit2]);
+
+%%
+
+% p=audioplayer(signal_spa,fs);
+% play(p)
 
 
-
-
+%% Algorithme de localisation
 % le signal sonore s'appelle signal_spa
 Taille_1_groupe=2.5*Lframe;
 Taille_1_algo=Ng*Taille_1_groupe;   % environ 0.3 secondes
@@ -86,7 +79,7 @@ Nb_Loca=floor(length(signal_spa)/Taille_1_algo);
 
 
 %allocations
-lieu=zeros(num_exp,Q);
+lieu=zeros(Nb_Loca,Q);
 
 x1t{Ng,Nf}=zeros(Lframe,1);
 x2t{Ng,Nf}=zeros(Lframe,1);
@@ -101,7 +94,7 @@ coef=sqrt(N/duree_son);
 for num_exp=1:Nb_Loca
     % Calcul de Qn
     
-    %obtention du Z
+    % obtention du Z
     deb=Taille_1_algo*(num_exp-1);
     x1=signal_spa(deb+1:deb+Taille_1_algo,1); 
     x2=signal_spa(deb+1:deb+Taille_1_algo,2);
