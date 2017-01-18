@@ -2,7 +2,7 @@ function theta_estimee=algo2(theta_init,J,Q,Ng,B)
 
 theta_estimee=theta_init;
 eta=1;
-maxit=10;
+maxit=100;
 count=0;
 delta_L=Inf;
 
@@ -12,7 +12,7 @@ delta_L=Inf;
 
 while delta_L >= eta || count<maxit
     count=count+1;
-    
+    fprintf('Iteration numero %2d\n',count);
     for q=1:Q
        if count==1
            theta_estimee(q)=theta_init(q);
@@ -22,11 +22,13 @@ while delta_L >= eta || count<maxit
            for ng=1:Ng
               sum1=zeros(360,1);
               for b=1:B
-                  sum1=sum1+gamma(q,ng,b)*J(ng,b,:); %dimensions a verifier
+                  int=squeeze(J(ng,b,:));
+                  sum1=sum1+gamma(q,ng,b)*int; %dimensions a verifier
               end
               sum0=sum0+sum1;
            end
-           theta_estimee(q)=max(sum0)
+           int=round(real(max(sum0)));
+           theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
        end
     end
     
@@ -38,9 +40,10 @@ while delta_L >= eta || count<maxit
         for b=1:B
            sum2=0;
            for q=1:Q
+               %theta_estimee(q)
               sum2=sum2+1/Q*exp(J(ng,b,theta_estimee(q))); 
            end
-           sum1=sum1+sum2;
+           sum1=sum1+log(sum2);
         end
         sum0=sum0+sum1;
     end  
@@ -52,6 +55,7 @@ while delta_L >= eta || count<maxit
     else
         L_theta_chapeau=sum0;
     end
+    fprintf('\t Delta_L = %3f \n',delta_L);
     theta_precedent=theta_estimee;
     % Expectation step
     for ng=1:Ng
@@ -63,9 +67,14 @@ while delta_L >= eta || count<maxit
             for q=1:Q
                 sum=sum+gamma_bar(q,ng,b);
             end
-            for q=1:Q
-                gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
-            end
+            %for q=1:Q
+         %   if sum ~=0
+                % gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
+                gamma(:,ng,b)=gamma_bar(:,ng,b)/sum;
+          %  else
+          %      gamma(:,ng,b)=gamma_bar(:,ng,b)*0;
+         %   end
+            % end
         end
     end
     

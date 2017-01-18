@@ -94,7 +94,7 @@ coef=sqrt(1/Lframe);
 
 for num_exp=1:Nb_Loca
     % Calcul de Qn
-    Qn=sigma^2*eye(2,2);
+    Qn=chol(sigma^2*eye(2,2));
     % Data acquisition
     deb=Taille_1_algo*(num_exp-1);
     x1=signal_spa(deb+1:deb+Taille_1_algo,1); 
