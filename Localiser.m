@@ -30,7 +30,7 @@ duree_son=length(signal_tot)/fs;
 %right_ear=zeros(length(signal_tot),1);
 %signal_spa=zeros(length(signal_tot),2);
 %Positions
-Positions=[90,-90];
+Positions=[90,270];
 
 % spatialisation  35
 impulseResponse = hrir.getImpulseResponses(90);
@@ -67,7 +67,7 @@ signal_spa=rechelonner(signal_spa);
 %%
 
 p=audioplayer(signal_spa,fs);
-%play(p)
+play(p)
 
 
 %% Algorithme de localisation
@@ -125,7 +125,7 @@ for num_exp=1:Nb_Loca
     
     
     % Data conditionning
-    J=algo1(Z,Qn,V,B,Ng,Nf,Ntheta);
+    J=real(algo1(Z,Qn,V,B,Ng,Nf,Ntheta));
     theta_init=ones(Q,1);
     % Localization
     theta_estimee=algo2(theta_init,J,Q,Ng,B);

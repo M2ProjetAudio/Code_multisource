@@ -40,7 +40,7 @@ while delta_L >= eta || count<maxit
         for b=1:B
            sum2=0;
            for q=1:Q
-               %theta_estimee(q)
+               theta_estimee(q)
               sum2=sum2+1/Q*exp(J(ng,b,theta_estimee(q))); 
            end
            sum1=sum1+log(sum2);
