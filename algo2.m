@@ -26,7 +26,7 @@ while delta_L >= eta || count<maxit
               end
               sum0=sum0+sum1;
            end
-           theta_estimee(q)=max(sum0);
+           theta_estimee(q)=max(sum0)
        end
     end
     

@@ -94,8 +94,8 @@ coef=sqrt(1/Lframe);
 
 for num_exp=1:Nb_Loca
     % Calcul de Qn
-    
-    % obtention du Z
+    Qn=sigma^2*eye(2,2);
+    % Data acquisition
     deb=Taille_1_algo*(num_exp-1);
     x1=signal_spa(deb+1:deb+Taille_1_algo,1); 
     x2=signal_spa(deb+1:deb+Taille_1_algo,2);
@@ -124,9 +124,10 @@ for num_exp=1:Nb_Loca
     % Z est un vecteur (B*Ng*Nf*2,1)
     
     
-    % Application algo1
-    J=algo1(Z,Qn,V);
-    theta_init=zeros(Q,1);
+    % Data conditionning
+    J=algo1(Z,Qn,V,B,Ng,Nf,Ntheta);
+    theta_init=ones(Q,1);
+    % Localization
     theta_estimee=algo2(theta_init,J,Q,Ng,B);
     lieu(num_exp,:)=theta_estimee';
 end
