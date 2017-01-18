@@ -30,16 +30,16 @@ duree_son=length(signal_tot)/fs;
 %right_ear=zeros(length(signal_tot),1);
 %signal_spa=zeros(length(signal_tot),2);
 %Positions
-Positions=[30,-85];
+Positions=[90,-90];
 
 % spatialisation  35
-impulseResponse = hrir.getImpulseResponses(30);
+impulseResponse = hrir.getImpulseResponses(90);
 left_ear=conv(signal_tot(:,1),impulseResponse.left);
 right_ear=conv(signal_tot(:,1),impulseResponse.right); 
 signal_spa{1} =[left_ear(1:length(signal_tot)),right_ear(1:length(signal_tot)) ];
  
  % spatialisation  -85
-impulseResponse = hrir.getImpulseResponses(-85);
+impulseResponse = hrir.getImpulseResponses(-90);
 left_ear=conv(signal_tot(:,2),impulseResponse.left);
 right_ear=conv(signal_tot(:,2),impulseResponse.right); 
 signal_spa{2} =[left_ear(1:length(signal_tot)),...
@@ -61,12 +61,13 @@ bruit2=randn(size(signal_tot,1),1);
 bruit1=filter(b,a,bruit1);
 bruit2=filter(b,a,bruit2);
 
-signal_spa=rechelonner(signal_spa+sigma*[bruit1,bruit2]);
+signal_spa=signal_spa+sigma*[bruit1,bruit2];
+signal_spa=rechelonner(signal_spa);
 
 %%
 
-% p=audioplayer(signal_spa,fs);
-% play(p)
+p=audioplayer(signal_spa,fs);
+%play(p)
 
 
 %% Algorithme de localisation
@@ -87,9 +88,9 @@ X1{Ng,Nf}=zeros(Lframe,1);
 X2{Ng,Nf}=zeros(Lframe,1);
 Zint=zeros(Nf*2,1);
 Zint2=zeros(Ng*Nf*2,1);
-Z=zeros(B*Ng*Nf*2,1);
+Z=zeros(2,1,B,Ng,Nf);
 w=hanning(Lframe);
-coef=sqrt(N/duree_son);
+coef=sqrt(1/Lframe);
 
 for num_exp=1:Nb_Loca
     % Calcul de Qn
@@ -114,13 +115,11 @@ for num_exp=1:Nb_Loca
     for k=1:B
         for ng=1:Ng
             for nf=1:Nf
-                Zint(2*nf-1:2*nf,1)=[X1{ng,nf}(freqIndexes(k));...
+                Z(:,:,k,ng,nf)=[X1{ng,nf}(freqIndexes(k));...
                     X2{ng,nf}(freqIndexes(k))];
                 % zint est un vecteur (8,1)
             end
-            Zint2((ng-1)*Nf*2+1:ng*Nf*2,1)=Zint;     
         end
-        Z((k-1)*Ng*Nf*2+1:k*Ng*Nf*2,1)=Zint2;
     end
     % Z est un vecteur (B*Ng*Nf*2,1)
     

@@ -25,11 +25,12 @@ end
 H = squeeze(HRTF(:,2,:)./HRTF(:,1,:));
 
 P=NaN(2,2,Nbfreq,Ntheta);
+V=NaN(2,1,Nbfreq,Ntheta);
 
 for k=1:B
     for ntheta=1:Ntheta
-        V=[1;H(freqIndexes(k),ntheta)];
-        P(:,:,k,ntheta)=(V*V')/(V'*V); %donnee
+        V(:,:,k,ntheta)=[1;H(freqIndexes(k),ntheta)];
+        P(:,:,k,ntheta)=(V(:,:,k,ntheta)*V(:,:,k,ntheta)')/(V(:,:,k,ntheta)'*V(:,:,k,ntheta)); %donnee
     end
 end
 hrir = simulator.DirectionalIR(xml.dbGetFile...
