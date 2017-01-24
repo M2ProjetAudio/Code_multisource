@@ -6,7 +6,7 @@ Lframe=512;
 Ng=10;
 Nf=4;
 B=128;
-Q=2;
+Q=1;      Positions=[-90,160];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
@@ -15,40 +15,35 @@ Ntheta=length(az);
 %%
    y{1}=mean(audioread('chasseurs.wav'),2);
    y{2}=mean(audioread('police.wav'),2);
+   y{3}=mean(audioread('philo.wav'),2);
    
-   
-taille_min=min(length(y{1}),length(y{2}));
+taille_min=min([length(y{1}),length(y{2}),length(y{3})]);
 
-signal_tot=[y{1}(1:taille_min),y{2}(1:taille_min)] ;
+signal_tot=[y{1}(1:taille_min),y{2}(1:taille_min),y{3}(1:taille_min)] ;
 
 
 duree_son=length(signal_tot)/fs;
 
 
 [hrir,H,P,V]=get_hrtf(Lframe,B,az,Nbfreq,Ntheta,freqIndexes);
-%left_ear=zeros(length(signal_tot),1);
-%right_ear=zeros(length(signal_tot),1);
-%signal_spa=zeros(length(signal_tot),2);
-%Positions
-Positions=[90,270];
-
-% spatialisation  35
-impulseResponse = hrir.getImpulseResponses(90);
-left_ear=conv(signal_tot(:,1),impulseResponse.left);
-right_ear=conv(signal_tot(:,1),impulseResponse.right); 
-signal_spa{1} =[left_ear(1:length(signal_tot)),right_ear(1:length(signal_tot)) ];
+signal_spa{Q}=[];
+for q=1:Q
+    signal_spa{q}=zeros(taille_min,1);
+end
+for q=1:Q
+impulseResponse = hrir.getImpulseResponses(Positions(q));
+left_ear=conv(signal_tot(:,q),impulseResponse.left);
+right_ear=conv(signal_tot(:,q),impulseResponse.right); 
+signal_spa{q} =[left_ear(1:length(signal_tot)),right_ear(1:length(signal_tot)) ];
  
- % spatialisation  -85
-impulseResponse = hrir.getImpulseResponses(-90);
-left_ear=conv(signal_tot(:,2),impulseResponse.left);
-right_ear=conv(signal_tot(:,2),impulseResponse.right); 
-signal_spa{2} =[left_ear(1:length(signal_tot)),...
-            right_ear(1:length(signal_tot)) ];
-        
-        
-signal_spa=(signal_spa{1}+signal_spa{2})/Q;
-
-
+end
+%signal_spa=(signal_spa{1}+signal_spa{2})/Q;
+sum=zeros(size(signal_spa{1}));
+for q=1:Q
+    sum=sum+signal_spa{q};
+end
+clear 'signal_spa';
+signal_spa=sum/Q;
 %%  ajout du bruit au niveau de la reception
 
 Psig=mean(mean(signal_spa,2).^2);
