@@ -6,11 +6,14 @@ Lframe=512;
 Ng=10;
 Nf=4;
 B=128;
-Q=1;      Positions=[-90,160];
+Q=2;      Positions=[-30,160];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
 az=(-180:179);
+% grille des azimuths testes
+thetaArg=az*pi/180;
+
 Ntheta=length(az);
 %%
    y{1}=mean(audioread('chasseurs.wav'),2);
@@ -62,7 +65,7 @@ signal_spa=rechelonner(signal_spa);
 %%
 
 p=audioplayer(signal_spa,fs);
-play(p)
+%play(p)
 
 
 %% Algorithme de localisation
@@ -91,7 +94,8 @@ for num_exp=1:Nb_Loca
     % Calcul de Qn
     Qn=chol(sigma^2*eye(2,2));
     % Data acquisition
-    deb=Taille_1_algo*(num_exp-1);
+    deb=Taille_1_algo*(num_exp-1);   % 
+   % deb=Taille_1_algo*(num_exp+round(Nb_Loca/2)-1);
     x1=signal_spa(deb+1:deb+Taille_1_algo,1); 
     x2=signal_spa(deb+1:deb+Taille_1_algo,2);
     for ng=1:Ng
@@ -121,8 +125,9 @@ for num_exp=1:Nb_Loca
     
     % Data conditionning
     J=real(algo1(Z,Qn,V,B,Ng,Nf,Ntheta));
-    theta_init=ones(Q,1);
+    SQ=round(linspace(1,359,Q+1));
+    theta_init=SQ(1:end-1)';
     % Localization
-    theta_estimee=algo2(theta_init,J,Q,Ng,B);
-    lieu(num_exp,:)=theta_estimee';
+    theta_estimee=algo2(theta_init,J,Q,Ng,B,thetaArg);
+    lieu(num_exp,:)=thetaArg(theta_estimee)*180/pi;
 end

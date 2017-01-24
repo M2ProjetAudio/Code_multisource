@@ -1,8 +1,8 @@
-function theta_estimee=algo2(theta_init,J,Q,Ng,B)
+function theta_estimee=algo2(theta_init,J,Q,Ng,B,thetaArg)
 
 theta_estimee=theta_init;
-eta=1;
-maxit=100;
+eta=.02;
+maxit=10;
 count=0;
 delta_L=Inf;
 
@@ -10,7 +10,7 @@ delta_L=Inf;
  gamma_bar=zeros(Q,Ng,B);
  gamma=zeros(Q,Ng,B);
 
-while delta_L >= eta || count<maxit
+while delta_L >= eta && count<maxit
     count=count+1;
     fprintf('Iteration numero %2d\n',count);
     for q=1:Q
@@ -27,8 +27,11 @@ while delta_L >= eta || count<maxit
               end
               sum0=sum0+sum1;
            end
-           int=round(real(max(sum0)));
-           theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
+           [~,theta_estimee(q)]=max(sum0);
+          % theta_estimee(q)=thetaArg(idxmax);
+           %int=round(real(max(sum0)));
+           %theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
+           
        end
     end
     
@@ -40,8 +43,9 @@ while delta_L >= eta || count<maxit
         for b=1:B
            sum2=0;
            for q=1:Q
-               theta_estimee(q)
-              sum2=sum2+1/Q*exp(J(ng,b,theta_estimee(q))); 
+           %    theta_estimee(q)
+              sum2=sum2+exp(J(ng,b,theta_estimee(q)))/Q; 
+            %  sum2=sum2+J(ng,b,theta_estimee(q))/Q; 
            end
            sum1=sum1+log(sum2);
         end
@@ -55,7 +59,8 @@ while delta_L >= eta || count<maxit
     else
         L_theta_chapeau=sum0;
     end
-    fprintf('\t Delta_L = %3f \n',delta_L);
+    fprintf('\t Estimation= %.0f \n',thetaArg(theta_estimee)*180/pi);
+    fprintf('\t Delta_L = %.2f \n',delta_L);
     theta_precedent=theta_estimee;
     % Expectation step
     for ng=1:Ng

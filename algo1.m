@@ -14,11 +14,13 @@ for b=1:B
    end
    
    for th=1:Nt
-       Vt=Q(:,:)\V(:,:,b,th);
-       P=Vt*inv(Vt'*Vt)*Vt';
+       %Vt=Q(:,:)\V(:,:,b,th);
+       Vt=V(:,:,b,th);
+       P=Vt/(Vt'*Vt)*Vt';        
        Pp=eye(2,2)-P;
        for ng=1:Ng
-          J(ng,b,th)=-Nf*(log(det(P*C(:,:,ng)*P+Pp))+trace(Pp*C(:,:,ng)));
+        %  J(ng,b,th)=-Nf*(log(det(P*C(:,:,ng)*P+Pp))+trace(Pp*C(:,:,ng)));
+        J(ng,b,th)=-2*Nf*log(.5*trace(Pp*C(:,:,ng)));
        end   
    end
 end
