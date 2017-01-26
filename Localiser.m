@@ -2,11 +2,11 @@ clear variables
 close all
 clc
 
-Lframe=512;
+Lframe=1024;
 Ng=10;
 Nf=4;
 B=128;
-Q=2;      Positions=[-30,160];
+Q=2;      Positions=[10,160];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
@@ -19,6 +19,10 @@ Ntheta=length(az);
    y{1}=mean(audioread('chasseurs.wav'),2);
    y{2}=mean(audioread('police.wav'),2);
    y{3}=mean(audioread('philo.wav'),2);
+   
+   y{1}=randn(5*44100,1);
+   y{2}=randn(5*44100,1);
+   y{3}=randn(5*44100,1);
    
 taille_min=min([length(y{1}),length(y{2}),length(y{3})]);
 
@@ -53,14 +57,14 @@ Psig=mean(mean(signal_spa,2).^2);
 sigma=sqrt(Psig/10)/10;
 
 % ajout d'un bruit Basse Frequence
-bruit1=randn(size(signal_tot,1),1);
-bruit2=randn(size(signal_tot,1),1);
+bruit1=sigma*randn(size(signal_tot,1),1);
+bruit2=sigma*randn(size(signal_tot,1),1);
 [b,a]=butter(3,2000/(fs/2),'low'); % je mets fc a 2khz
 bruit1=filter(b,a,bruit1);
 bruit2=filter(b,a,bruit2);
 
 signal_spa=signal_spa+sigma*[bruit1,bruit2];
-signal_spa=rechelonner(signal_spa);
+%signal_spa=rechelonner(signal_spa);
 
 %%
 
@@ -124,7 +128,7 @@ for num_exp=1:Nb_Loca
     
     
     % Data conditionning
-    J=real(algo1(Z,Qn,V,B,Ng,Nf,Ntheta));
+    J=real(algo1(Z,1,V,B,Ng,Nf,Ntheta));
     SQ=round(linspace(1,359,Q+1));
     theta_init=SQ(1:end-1)';
     % Localization
