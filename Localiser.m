@@ -129,6 +129,7 @@ for num_exp=1:Nb_Loca
     
     % Data conditionning
     J=real(algo1(Z,1,V,B,Ng,Nf,Ntheta));
+    J=arrangement3(J);
     SQ=round(linspace(1,359,Q+1));
     theta_init=SQ(1:end-1)';
     % Localization
