@@ -6,7 +6,7 @@ Lframe=1024;
 Ng=10;
 Nf=4;
 B=128;
-Q=2;      Positions=[10,160];
+Q=2;      Positions=[85,-50];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
@@ -20,10 +20,11 @@ Ntheta=length(az);
    y{2}=mean(audioread('police.wav'),2);
    y{3}=mean(audioread('philo.wav'),2);
    
-   y{1}=randn(5*44100,1);
-   y{2}=randn(5*44100,1);
-   y{3}=randn(5*44100,1);
-   
+%    y{1}=randn(5*44100,1);
+%    y{2}=randn(5*44100,1);
+%    y{3}=randn(5*44100,1);
+
+
 taille_min=min([length(y{1}),length(y{2}),length(y{3})]);
 
 signal_tot=[y{1}(1:taille_min),y{2}(1:taille_min),y{3}(1:taille_min)] ;

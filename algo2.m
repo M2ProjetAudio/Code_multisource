@@ -28,12 +28,12 @@ while delta_L >= eta || count<maxit
                 sum0=sum0+sum1;
             end
             %discutable ....
-            if q>1
-                sum0(theta_estimee(q-1))=[];
+           % if q>1
+            %    sum0(theta_estimee(q-1))=[];
+            %    [~,theta_estimee(q)]=max(sum0);
+           % else
                 [~,theta_estimee(q)]=max(sum0);
-            else
-                [~,theta_estimee(q)]=max(sum0);
-            end
+            %end
             % theta_estimee(q)=thetaArg(idxmax);
             %int=round(real(max(sum0)));
             %theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
@@ -52,7 +52,7 @@ while delta_L >= eta || count<maxit
                 %    theta_estimee(q)
                 
                 sum2=sum2+exp(J(ng,b,theta_estimee(q)))/Q;
-                %  sum2=sum2+J(ng,b,theta_estimee(q))/Q;
+                %sum2=sum2+J(ng,b,theta_estimee(q))/Q;
             end
             sum1=sum1+log(sum2);
         end
@@ -72,22 +72,30 @@ while delta_L >= eta || count<maxit
     % Expectation step
     for ng=1:Ng
         for b=1:B
+%             for q=1:Q
+%                 gamma_bar(q,ng,b)=exp(J(ng,b,theta_precedent(q)));
+%             end
+%             sum=0;
+%             for q=1:Q
+%                 sum=sum+gamma_bar(q,ng,b);
+%             end
+%             %for q=1:Q
+%             if sum ~=0
+%                 % gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
+%                 gamma(:,ng,b)=gamma_bar(:,ng,b)/sum;
+%             else
+%                 gamma(:,ng,b)=0;
+%             end
+       
+        
+            criteres_testes=squeeze(J(ng,b,theta_precedent));
             for q=1:Q
-                gamma_bar(q,ng,b)=exp(J(ng,b,theta_precedent(q)));
+                [~,qmax]=max(criteres_testes);
+                criteres_testes(qmax)=-Inf;
+                gamma(qmax,ng,b)= (Q+1-q)^2 ;
             end
-            sum=0;
-            for q=1:Q
-                sum=sum+gamma_bar(q,ng,b);
-            end
-            %for q=1:Q
-               if sum ~=0
-            % gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
-            gamma(:,ng,b)=gamma_bar(:,ng,b)/sum;
-              else
-                 gamma(:,ng,b)=0;
-               end
-            % end
+            gamma(:,ng,b)=gamma(:,ng,b)/sum(gamma(:,ng,b));
         end
+        1;
     end
-    
 end
