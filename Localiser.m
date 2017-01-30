@@ -54,19 +54,19 @@ clear 'signal_spa';
 signal_spa=sum/Q;
 %%  ajout du bruit au niveau de la reception
 
-Psig=mean(mean(signal_spa,2).^2);
-sigma=sqrt(Psig/10)/10;
-
-% ajout d'un bruit Basse Frequence
-bruit1=sigma*randn(size(signal_tot,1),1);
-bruit2=sigma*randn(size(signal_tot,1),1);
-[b,a]=butter(3,2000/(fs/2),'low'); % je mets fc a 2khz
-bruit1=filter(b,a,bruit1);
-bruit2=filter(b,a,bruit2);
-
-signal_spa=signal_spa+sigma*[bruit1,bruit2];
-%signal_spa=rechelonner(signal_spa);
-
+% Psig=mean(mean(signal_spa,2).^2);
+% sigma=sqrt(Psig/10)/10;
+% 
+% % ajout d'un bruit Basse Frequence
+% bruit1=sigma*randn(size(signal_tot,1),1);
+% bruit2=sigma*randn(size(signal_tot,1),1);
+% [b,a]=butter(3,2000/(fs/2),'low'); % je mets fc a 2khz
+% bruit1=filter(b,a,bruit1);
+% bruit2=filter(b,a,bruit2);
+% 
+% signal_spa=signal_spa+sigma*[bruit1,bruit2];
+% %signal_spa=rechelonner(signal_spa);
+sigma=1;
 %%
 
 p=audioplayer(signal_spa,fs);
@@ -133,6 +133,7 @@ for num_exp=1:Nb_Loca
     J=arrangement3(J);
     SQ=round(linspace(1,359,Q+1));
     theta_init=SQ(1:end-1)';
+    theta_init=[50,240];
     % Localization
     theta_estimee=algo2(theta_init,J,Q,Ng,B,thetaArg);
     lieu(num_exp,:)=thetaArg(theta_estimee)*180/pi;

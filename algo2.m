@@ -28,12 +28,16 @@ while delta_L >= eta || count<maxit
                 sum0=sum0+sum1;
             end
             %discutable ....
-           % if q>1
-            %    sum0(theta_estimee(q-1))=[];
-            %    [~,theta_estimee(q)]=max(sum0);
-           % else
+            if q>1
+                sum0(theta_estimee(q-1))=[];
                 [~,theta_estimee(q)]=max(sum0);
-            %end
+                while abs(  theta_estimee(q)-theta_estimee(q-1))<5
+                    sum0(theta_estimee(q))=[];
+                    [~,theta_estimee(q)]=max(sum0);
+                end
+            else
+                [~,theta_estimee(q)]=max(sum0);
+            end
             % theta_estimee(q)=thetaArg(idxmax);
             %int=round(real(max(sum0)));
             %theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
@@ -43,7 +47,7 @@ while delta_L >= eta || count<maxit
     
     
     %LogLikelihood computation
-    sum0=1;
+    sum0=0;
     for ng=1:Ng
         sum1=0;
         for b=1:B
@@ -66,35 +70,39 @@ while delta_L >= eta || count<maxit
     else
         L_theta_chapeau=sum0;
     end
-    fprintf('\t Estimation= %.0f \n',thetaArg(theta_estimee)*180/pi);
-    fprintf('\t Delta_L = %.2f \n',delta_L);
+    fprintf('\t\t Estimation= %.0f \n',thetaArg(theta_estimee)*180/pi);
+    fprintf('\t\t Delta_L = %.2f \n',delta_L);
     theta_precedent=theta_estimee;
     % Expectation step
     for ng=1:Ng
         for b=1:B
-%             for q=1:Q
-%                 gamma_bar(q,ng,b)=exp(J(ng,b,theta_precedent(q)));
-%             end
-%             sum=0;
-%             for q=1:Q
-%                 sum=sum+gamma_bar(q,ng,b);
-%             end
-%             %for q=1:Q
-%             if sum ~=0
-%                 % gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
-%                 gamma(:,ng,b)=gamma_bar(:,ng,b)/sum;
-%             else
-%                 gamma(:,ng,b)=0;
-%             end
-       
-        
-            criteres_testes=squeeze(J(ng,b,theta_precedent));
+%             fprintf('\n\n')
             for q=1:Q
-                [~,qmax]=max(criteres_testes);
-                criteres_testes(qmax)=-Inf;
-                gamma(qmax,ng,b)= (Q+1-q)^2 ;
+                %fprintf('\t\t poids brut: gamma_bar(q=%d,ng=%d,b=%d)=%.2f\n',q,ng,b,exp(J(ng,b,theta_precedent(q))))
+                gamma_bar(q,ng,b)=exp(J(ng,b,theta_precedent(q)));
             end
-            gamma(:,ng,b)=gamma(:,ng,b)/sum(gamma(:,ng,b));
+            sum1=0;
+            for q=1:Q
+                sum1=sum1+gamma_bar(q,ng,b);
+            end
+            
+            %for q=1:Q
+            %             if sum ~=0
+            % gamma(q,ng,b)=gamma_bar(q,ng,b)/sum;
+            gamma(:,ng,b)=gamma_bar(:,ng,b)/sum1;
+            %             else
+            %                 gamma(:,ng,b)=0;
+            %             end
+%             for q=1:Q
+%                 fprintf('\t\t poids relatifs: gamma(:,ng=%d,b=%d)=%.2f\n',ng,b,gamma(q,ng,b))
+%             end
+            %             criteres_testes=squeeze(J(ng,b,theta_precedent));
+            %             for q=1:Q
+            %                 [~,qmax]=max(criteres_testes);
+            %                 criteres_testes(qmax)=-Inf;
+            %                 gamma(qmax,ng,b)= (Q+1-q)^2 ;
+            %             end
+            %             gamma(:,ng,b)=gamma(:,ng,b)/sum(gamma(:,ng,b));
         end
         1;
     end
