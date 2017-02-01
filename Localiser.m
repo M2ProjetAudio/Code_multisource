@@ -6,7 +6,7 @@ Lframe=1024;
 Ng=10;
 Nf=4;
 B=128;
-Q=2;      Positions=[85,-50];
+Q=2;      Positions=[85,-50,-175];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
@@ -19,11 +19,21 @@ Ntheta=length(az);
 %    y{1}=mean(audioread('chasseurs.wav'),2);
 %    y{2}=mean(audioread('police.wav'),2);
 %    y{3}=mean(audioread('philo.wav'),2);
-   
-   y{1}=randn(5*44100,1);
-   y{2}=randn(5*44100,1);
-   y{3}=randn(5*44100,1);
 
+y{1}=randn(5*44100,1);
+band1=[500/(fs/2) 1500/(fs/2)];
+[b,a]=butter(4,band1);
+y{1}=filter(b,a,y{1});
+
+y{2}=randn(5*44100,1);
+band2=[1500/(fs/2) 2500/(fs/2)];
+[b,a]=butter(4,band2);
+y{2}=filter(b,a,y{2});
+
+y{3}=randn(5*44100,1);
+band3=[3500/(fs/2) 4000/(fs/2)];
+[b,a]=butter(4,band3);
+y{3}=filter(b,a,y{3});
 
 taille_min=min([length(y{1}),length(y{2}),length(y{3})]);
 
@@ -39,11 +49,11 @@ for q=1:Q
     signal_spa{q}=zeros(taille_min,1);
 end
 for q=1:Q
-impulseResponse = hrir.getImpulseResponses(Positions(q));
-left_ear=conv(signal_tot(:,q),impulseResponse.left);
-right_ear=conv(signal_tot(:,q),impulseResponse.right); 
-signal_spa{q} =[left_ear(1:length(signal_tot)),right_ear(1:length(signal_tot)) ];
- 
+    impulseResponse = hrir.getImpulseResponses(Positions(q));
+    left_ear=conv(signal_tot(:,q),impulseResponse.left);
+    right_ear=conv(signal_tot(:,q),impulseResponse.right);
+    signal_spa{q} =[left_ear(1:length(signal_tot)),right_ear(1:length(signal_tot)) ];
+    
 end
 %signal_spa=(signal_spa{1}+signal_spa{2})/Q;
 sum=zeros(size(signal_spa{1}));
@@ -99,9 +109,9 @@ for num_exp=1:Nb_Loca
     % Calcul de Qn
     Qn=chol(sigma^2*eye(2,2));
     % Data acquisition
-    deb=Taille_1_algo*(num_exp-1);   % 
-   % deb=Taille_1_algo*(num_exp+round(Nb_Loca/2)-1);
-    x1=signal_spa(deb+1:deb+Taille_1_algo,1); 
+    deb=Taille_1_algo*(num_exp-1);   %
+    % deb=Taille_1_algo*(num_exp+round(Nb_Loca/2)-1);
+    x1=signal_spa(deb+1:deb+Taille_1_algo,1);
     x2=signal_spa(deb+1:deb+Taille_1_algo,2);
     for ng=1:Ng
         deb1=Taille_1_groupe*(ng-1);
