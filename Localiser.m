@@ -2,11 +2,11 @@ clear variables
 close all
 clc
 
-Lframe=1024;
+Lframe=512;
 Ng=10;
 Nf=4;
 B=128;
-Q=2;      Positions=[85,-50,-175];
+Q=1;      Positions=[25,-80,-175];
 fs=44100;
 Nbfreq=B;
 freqIndexes=round(linspace(1,round(Lframe) ,B));
@@ -15,26 +15,34 @@ az=(-180:179);
 thetaArg=az*pi/180;
 
 Ntheta=length(az);
+bidouille=0;   % 1 => arrangement  ;  2 => arrangement3
+sourcetype='gauss' ;  %  'parole'  ou 'gauss'
+bruit=1;   % 1 si ajout de bruit, 0 sinon
 %%
-%    y{1}=mean(audioread('chasseurs.wav'),2);
-%    y{2}=mean(audioread('police.wav'),2);
-%    y{3}=mean(audioread('philo.wav'),2);
-
-y{1}=randn(5*44100,1);
-band1=[500/(fs/2) 1500/(fs/2)];
-[b,a]=butter(4,band1);
-y{1}=filter(b,a,y{1});
-
-y{2}=randn(5*44100,1);
-band2=[1500/(fs/2) 2500/(fs/2)];
-[b,a]=butter(4,band2);
-y{2}=filter(b,a,y{2});
-
-y{3}=randn(5*44100,1);
-band3=[3500/(fs/2) 4000/(fs/2)];
-[b,a]=butter(4,band3);
-y{3}=filter(b,a,y{3});
-
+if strcmp(sourcetype,'parole')
+    y{1}=mean(audioread('chasseurs.wav'),2);
+    y{2}=mean(audioread('police.wav'),2);
+    y{3}=mean(audioread('philo.wav'),2);
+else
+    % sources gaussiennes
+    y{1}=randn(5*44100,1);
+    y{2}=randn(5*44100,1);
+    y{3}=randn(5*44100,1);
+    
+    % repartition des sources sur plusieurs bande passante
+    band1=[500/(fs/2) 1500/(fs/2)];
+    [b,a]=butter(2,band1);
+    y{1}=filter(b,a,y{1});
+    
+    band2=[1500/(fs/2) 5000/(fs/2)];
+    [b,a]=butter(2,band2);
+    y{2}=filter(b,a,y{2});
+    
+    
+    band3=[3500/(fs/2) 4000/(fs/2)];
+    [b,a]=butter(4,band3);
+    y{3}=filter(b,a,y{3});
+end
 taille_min=min([length(y{1}),length(y{2}),length(y{3})]);
 
 signal_tot=[y{1}(1:taille_min),y{2}(1:taille_min),y{3}(1:taille_min)] ;
@@ -42,7 +50,7 @@ signal_tot=[y{1}(1:taille_min),y{2}(1:taille_min),y{3}(1:taille_min)] ;
 
 duree_son=length(signal_tot)/fs;
 
-
+ 
 [hrir,H,P,V]=get_hrtf(Lframe,B,az,Nbfreq,Ntheta,freqIndexes);
 signal_spa{Q}=[];
 for q=1:Q
@@ -63,22 +71,44 @@ end
 clear 'signal_spa';
 signal_spa=sum/Q;
 %%  ajout du bruit au niveau de la reception
-
-Psig=mean(mean(signal_spa,2).^2);
-sigma=sqrt(Psig/10)/10;
-
-% ajout d'un bruit Basse Frequence
-bruit1=sigma*randn(size(signal_tot,1),1);
-bruit2=sigma*randn(size(signal_tot,1),1);
-[b,a]=butter(3,2000/(fs/2),'low'); % je mets fc a 2khz
-bruit1=filter(b,a,bruit1);
-bruit2=filter(b,a,bruit2);
-
-signal_spa=signal_spa+sigma*[bruit1,bruit2];
-%signal_spa=rechelonner(signal_spa);
-%sigma=1;
+Qn(2,2,B)=0;
+if bruit==1
+    Psig=mean(mean(signal_spa,2).^2);
+    sigma=sqrt(Psig/10)/10;
+    
+    % ajout d'un bruit Basse Frequence
+    bruit1=sigma*randn(size(signal_tot,1),1);
+    bruit2=sigma*randn(size(signal_tot,1),1);
+    [b,a]=butter(3,2000/(fs/2),'low'); % je mets fc a 2khz
+    bruit1=filter(b,a,bruit1);
+    bruit2=filter(b,a,bruit2);
+    B1=fft(bruit1);
+    B2=fft(bruit2);
+    signal_spa=signal_spa+[bruit1,bruit2];
+    
+    
+    %signal_spa=rechelonner(signal_spa);
+    %sigma=1;
+    
+    % extraction des covariances et racines de Cholesky du bruit
+    
+    for k=1:B
+        Cnk=[B1(k)*B1(k)',0;0,B2(k)*B2(k)'];
+        Qn(:,:,k)=chol(real(Cnk));
+    end
+else
+    for k=1:B
+        Qn(:,:,k)=eye(2);
+    end
+end
+%% si on load un fichier
+% load stereo.mat
+% y=cell2mat(y_stereo_cell);
+% y=y(1:length(signal_spa),:);
+% y=y/max(max(y));
+% signal_spa=y;
+% fs=24414;
 %%
-
 p=audioplayer(signal_spa,fs);
 %play(p)
 
@@ -106,8 +136,7 @@ w=hanning(Lframe);
 coef=sqrt(1/Lframe);
 
 for num_exp=1:Nb_Loca
-    % Calcul de Qn
-    Qn=chol(sigma^2*eye(2,2));
+    fprintf('\n\nNouvelle localisation\n')
     % Data acquisition
     deb=Taille_1_algo*(num_exp-1);   %
     % deb=Taille_1_algo*(num_exp+round(Nb_Loca/2)-1);
@@ -129,9 +158,10 @@ for num_exp=1:Nb_Loca
     for k=1:B
         for ng=1:Ng
             for nf=1:Nf
-                Z(:,:,k,ng,nf)=[X1{ng,nf}(freqIndexes(k));...
-                    X2{ng,nf}(freqIndexes(k))];
-                % zint est un vecteur (8,1)
+                                                 Z(:,:,k,ng,nf)=[X1{ng,nf}(freqIndexes(k));...
+                                                     X2{ng,nf}(freqIndexes(k))];
+%                 Z(:,:,k,ng,nf)=[X1{ng,nf}(k);...
+%                     X2{ng,nf}(k)];
             end
         end
     end
@@ -139,11 +169,15 @@ for num_exp=1:Nb_Loca
     
     
     % Data conditionning
-    J=real(algo1(Z,1,V,B,Ng,Nf,Ntheta));
-    J=arrangement3(J);
+    J=real(algo1(Z,Qn,V,B,Ng,Nf,Ntheta,sourcetype));
+    if bidouille==1
+        J=arrangement(J);
+    elseif bidouille==2
+        J=arrangement3(J);
+    end
     SQ=round(linspace(1,359,Q+1));
-    theta_init=SQ(1:end-1)';
-    theta_init=[50,240];
+     theta_init=SQ(1:end-1)';
+%     theta_init=[50];% 240];
     % Localization
     theta_estimee=algo2(theta_init,J,Q,Ng,B,thetaArg);
     lieu(num_exp,:)=thetaArg(theta_estimee)*180/pi;

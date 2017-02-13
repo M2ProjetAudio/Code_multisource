@@ -9,10 +9,10 @@ delta_L=Inf;
 % a allouer
 gamma_bar=zeros(Q,Ng,B);
 gamma=zeros(Q,Ng,B);
-
+fprintf('\t algo 2\n');
 while delta_L >= eta || count<maxit
     count=count+1;
-    fprintf('Iteration numero %2d\n',count);
+    fprintf('\t\tIteration numero %2d\n',count);
     for q=1:Q
         if count==1
             theta_estimee(q)=theta_init(q);
@@ -22,22 +22,22 @@ while delta_L >= eta || count<maxit
             for ng=1:Ng
                 sum1=zeros(360,1);
                 for b=1:B
-                    int=squeeze(J(ng,b,:));
-                    sum1=sum1+gamma(q,ng,b)*int; %dimensions a verifier
+                    tmp=squeeze(J(ng,b,:));
+                    sum1=sum1+gamma(q,ng,b)*tmp;
                 end
                 sum0=sum0+sum1;
             end
             %discutable ....
-            if q>1
-                sum0(theta_estimee(q-1))=[];
+%             if q>1
+%                 sum0(theta_estimee(q-1))=[];
+%                 [~,theta_estimee(q)]=max(sum0);
+%                 while abs(  theta_estimee(q)-theta_estimee(q-1))<5
+%                     sum0(theta_estimee(q))=[];
+%                     [~,theta_estimee(q)]=max(sum0);
+%                 end
+%             else
                 [~,theta_estimee(q)]=max(sum0);
-                while abs(  theta_estimee(q)-theta_estimee(q-1))<5
-                    sum0(theta_estimee(q))=[];
-                    [~,theta_estimee(q)]=max(sum0);
-                end
-            else
-                [~,theta_estimee(q)]=max(sum0);
-            end
+%             end
             % theta_estimee(q)=thetaArg(idxmax);
             %int=round(real(max(sum0)));
             %theta_estimee(q)=mod(int,360)*(int~=0)+360*(int==0);
@@ -70,8 +70,8 @@ while delta_L >= eta || count<maxit
     else
         L_theta_chapeau=sum0;
     end
-    fprintf('\t\t Estimation= %.0f \n',thetaArg(theta_estimee)*180/pi);
-    fprintf('\t\t Delta_L = %.2f \n',delta_L);
+    fprintf('\t\t\t\t Estimation= %.0f \n',thetaArg(theta_estimee)*180/pi);
+    fprintf('\t\t\t\t\t\t\t\t\t\t  Delta_L = %.0f %%\n',delta_L*100);
     theta_precedent=theta_estimee;
     % Expectation step
     for ng=1:Ng
@@ -106,4 +106,5 @@ while delta_L >= eta || count<maxit
         end
         1;
     end
+    1;
 end
